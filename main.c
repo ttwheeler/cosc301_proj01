@@ -9,21 +9,112 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-
 #include "list.h"
+#include <sys/resource.h>
+#include <sys/time.h>
 
-void process_data(FILE *input_file) {
-    // !! your code should start here.  the input_file parameter
-    // is an already-open file.  you can read data from it using
-    // the fgets() C library function.  close it with the fclose()
-    // built-in function
+void process_data(FILE *input_file)
+{
+	char filestream[2000000]; 
+	struct node *new_node = NULL; 
+	if (input_file == stdin)
+	{
+	   printf("Type input: "); 
+	   int number;
+	   fflush(stdout);
+	   while(fgets(filestream, 2000000,stdin)!= NULL)
+	   { 	
+	        int slen = strlen(filestream);
+		filestream[slen-1] = '\0';  
+ 
+	        if(strlen(filestream) >= 1)
+	        {
+		    char *token = strtok(filestream, " \t\n");
+		    while(token != NULL)
+		    {
+		        int counter= 0; 
+		        for(int i=0; i<strlen(token); i++)
+    		        {
+    			    if(i == 0 && (isdigit(token[i]) || token[i]=='-'))
+    			    {
+    			    	counter++; 
+    			    }	 
+    			    else if(isdigit(token[i]))
+    			    {
+    				counter++; 
+	    		    }
+       		        }
+	    		if (counter == strlen(token))
+	    		{
+	    			number = atoi(token); 
+	    			list_append(&number, &new_node); 
+	    		}
+                        if(token[0]=='#')
+                        {
+                            token=strtok(NULL,"\n");
+                        }
+                        else
+                        {
+                            token = strtok(NULL, " \t\n");
+                        }
+		    }
+		    printf("add next item, or ctrl+d to exit: ");
+		    fflush(stdout);
+	        }
+   	   }
+	}
+	else
+	{
+		int number; 
+		while(fgets(filestream, 2000000,input_file) != NULL)
+		{
+			int slen = strlen(filestream);
+			filestream[slen-1] = '\0';   
+	
+			char *token = strtok(filestream, " \t\n"); 
 
-
-
-
+			while(token != NULL)
+			{
+			    int counter= 0; 
+	        	    for(int i=0; i<strlen(token); i++)
+			    {
+			        if(i == 0 && (isdigit(token[i]) || token[i]=='-'))
+				{
+				    counter++; 
+				}	 
+				else if(isdigit(token[i]))
+				{
+				    counter++; 
+				}
+			    }
+			    if (counter == strlen(token))
+			    {
+			        number = atoi(token); 
+				list_append(&number, &new_node); 
+			    }
+                            if(token[0]=='#')
+                            {
+                                token=strtok(NULL,"\n");
+                            }
+                            else
+                            {
+                                token=strtok(NULL, " \t\n");
+                            }
+			}
+		}
+	}
+        if(ferror input_file!=0)
+        {
+            printf("\nError reading file\n");
+            return;
+        }
+	list_print(new_node);
+        list_clear(new_node);
+        struct rusage use;
+        getrusage(RUSAGE_SELF,&use);
+        printf("\nUser time: %ld.%06lds\n",use.ru_utime.tv_sec,use.ru_utime.tv_usec);
+        printf("System time: %ld.%06lds\n",use.ru_stime.tv_sec,use.ru_stime.tv_usec);
 }
-
-
 void usage(char *program) {
     fprintf(stderr, "usage: %s [<datafile>]\n", program);
     exit(1);
